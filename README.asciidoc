@@ -25,31 +25,29 @@ Known Issues
 Usage
 -----
 
-[source,puppet]
-----
-  class { "beaver": }
+----------------------------------------------------------------------
+class { "beaver": }
 
-  # You can use bash expansions and globs
-  beaver::watch { "syslog files":
-    target => "/var/log/{secure,messages}",
-    type   => "syslog",
-  }
+# You can use bash expansions and globs
+beaver::watch { "syslog files":
+  target => "/var/log/{secure,messages}",
+  type   => "syslog",
+}
 
-  beaver::watch { "apache logs":
-    target => "/var/log/httpd/*_log",
-    type   => "apache",
-  }
+beaver::watch { "apache logs":
+  target => "/var/log/httpd/*_log",
+  type   => "apache",
+}
 
-  # If you leave off the target, the name will be used
-  beaver::watch { "/var/log/myapp/mylog.log":
-    type   => "myapp",
-  }
-----
+# If you leave off the target, the name will be used
+beaver::watch { "/var/log/myapp/mylog.log":
+  type   => "myapp",
+}
+----------------------------------------------------------------------
 
 TIP: I like to wrap my other modules in role based classes such as:
 
-[source,puppet]
-----
+----------------------------------------------------------------------
 class mysite::dashboard {
     class { 'mysite::firewall::dashboard': dashboard_port => 3000 }
 
@@ -74,11 +72,10 @@ class mysite::dashboard {
       type => "apache_access",
     }
   }
-----
+----------------------------------------------------------------------
 
 .logfile
-[source,puppet]
-----
+----------------------------------------------------------------------
   define mysite::logfile (
     $target = $name,
     $debug  = undef,
@@ -132,6 +129,6 @@ class mysite::dashboard {
       ensure                 => $ensure,
     }
   }
-----
+----------------------------------------------------------------------
 
 This ensures that the log is not only being fed to logstash so long as that node is a dashboard node, but it also ensures that the log gets rotated according to my standards.
