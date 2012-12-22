@@ -1,0 +1,137 @@
+Beaver Puppet Module
+====================
+
+This is the puppet module for https://github.com/josegonzalez/beaver[beaver], a python daemon that munches on logs and sends their contents to http://logstash.net/[logstash].
+
+License
+-------
+GPLv3
+
+Contact
+-------
+Joe Julian <me@joejulian.name>
+
+Support
+-------
+
+Please log tickets and issues at http://github.com/joejulian/joejulian-beaver[github]
+
+Known Issues
+------------
+
+* This currently only works on RHEL/CentOS
+* Is hardcoded to upload to redis on a server named logstash
+
+Usage
+-----
+
+[source,puppet]
+----
+  class { "beaver": }
+
+  # You can use bash expansions and globs
+  beaver::watch { "syslog files":
+    target => "/var/log/{secure,messages}",
+    type   => "syslog",
+  }
+
+  beaver::watch { "apache logs":
+    target => "/var/log/httpd/*_log",
+    type   => "apache",
+  }
+
+  # If you leave off the target, the name will be used
+  beaver::watch { "/var/log/myapp/mylog.log":
+    type   => "myapp",
+  }
+----
+
+TIP: I like to wrap my other modules in role based classes such as:
+
+[source,puppet]
+----
+class mysite::dashboard {
+    class { 'mysite::firewall::dashboard': dashboard_port => 3000 }
+
+    class { '::dashboard':
+      dashboard_ensure   => present,
+      dashboard_user     => 'puppet-dashboard',
+      dashboard_group    => 'puppet-dashboard',
+      dashboard_password => 'supersecret',
+      dashboard_db       => 'dashboard_prod',
+      dashboard_charset  => 'utf8',
+      dashboard_site     => 'puppet.mysite.com',
+      dashboard_port     => 3000,
+      mysql_root_pw      => 'supersecret2',
+      passenger          => true,
+    }
+
+    mysite::logfile { "/var/log/httpd/puppet.mysite.com_error.log":
+      type => "apache_error",
+    }
+
+    mysite::logfile { "/var/log/httpd/puppet.mysite.com_access.log":
+      type => "apache_access",
+    }
+  }
+----
+
+.logfile
+[source,puppet]
+----
+  define mysite::logfile (
+    $target = $name,
+    $debug  = undef,
+    $discover_interval = 15,
+    $exclude = undef,
+    $format  = undef,
+    $message_format = undef,
+    $sincedb_path = undef,         # not implemented in beaver
+    $sincedb_write_interval = 15,  #
+    $stat_interval = 1,
+    $tags = undef,
+    $type,
+    $ensure = present,
+    $owner = 'root',
+    $group = 'root',
+    $mode = '0600',
+    $options = []
+  ) {
+    include ::logrotate
+
+    $filename = sha1($name) # The name might not be a file and may contain a path
+                            # this messes with filename creation so just name it 
+                            # with a hash.
+
+    file { $filename:
+      path   => $target,
+      owner  => $owner,
+      group  => $group,
+      mode   => $mode,
+      ensure => $ensure,
+    }
+    if $ensure == "present" {
+      logrotate::file { $filename:
+        log     => $target,
+        options => $options,
+      }
+    }
+    include mysite::beaver
+    mysite::beaver::watch { $name:
+      target                 => $target,
+      debug                  => $debug,
+      discover_interval      => $discover_interval,
+      exclude                => $exclude,
+      format                 => $format,
+      message_format         => $message_format,
+      sincedb_path           => $sincedb_path,
+      sincedb_write_interval => $sincedb_write_interval,
+      stat_interval          => $stat_interval,
+      tags                   => $tags,
+      type                   => $type,
+      ensure                 => $ensure,
+    }
+  }
+----
+
+This ensures that the log is not only being fed to logstash so long as that node is a dashboard node, but it also ensures that the log gets rotated according to my standards.
