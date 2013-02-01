@@ -26,6 +26,7 @@ Usage
 -----
 
 ----------------------------------------------------------------------
+
 class { "beaver": }
 
 # You can use bash expansions and globs
@@ -43,11 +44,13 @@ beaver::watch { "apache logs":
 beaver::watch { "/var/log/myapp/mylog.log":
   type   => "myapp",
 }
+
 ----------------------------------------------------------------------
 
 TIP: I like to wrap my other modules in role based classes such as:
 
 ----------------------------------------------------------------------
+
 class mysite::dashboard {
     class { 'mysite::firewall::dashboard': dashboard_port => 3000 }
 
@@ -72,10 +75,12 @@ class mysite::dashboard {
       type => "apache_access",
     }
   }
+
 ----------------------------------------------------------------------
 
 .logfile
 ----------------------------------------------------------------------
+
   define mysite::logfile (
     $target = $name,
     $debug  = undef,
@@ -129,6 +134,7 @@ class mysite::dashboard {
       ensure                 => $ensure,
     }
   }
+
 ----------------------------------------------------------------------
 
 This ensures that the log is not only being fed to logstash so long as that node is a dashboard node, but it also ensures that the log gets rotated according to my standards.
