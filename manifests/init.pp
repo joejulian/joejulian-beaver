@@ -12,6 +12,11 @@ class beaver (
     source => "puppet:///modules/beaver/init.d/beaver",
   }
 
+  file { '/etc/sysconfig/beaver':
+    mode => '0755',
+    content => 'BEAVER_OPTIONS="-t redis"',
+  }
+
   service { $service_name:
     require   => File[ $init_path ],
     ensure    => running,
